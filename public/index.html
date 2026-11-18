@@ -84,7 +84,7 @@ h1{max-width:18ch;font-size:clamp(34px,5vw,50px);letter-spacing:-.05em;line-heig
 <div class="tools"><div class="tabs" id="tabs"></div><input type="text" id="q" placeholder="Buscar pelo nome" aria-label="Buscar pelo nome"><input type="hidden" id="fs" value="">
 <select id="fr" aria-label="Nota mínima"><option value="0">Qualquer nota</option><option value="4">4+ estrelas</option><option value="4.5">4,5+ estrelas</option></select>
 <label><input type="checkbox" id="fp"> Telefone</label><label><input type="checkbox" id="fi"> Instagram</label><button id="ffav">Favoritas</button><span class="sp"></span><button id="csv">CSV</button><button id="xls">Excel</button></div>
-<div class="list" id="res"></div><button class="more" id="more">Mostrar mais</button><p class="attr">Dados e resultados por <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> (ODbL).</p>
+<div class="list" id="res"></div><button class="more" id="more">Mostrar mais</button><p class="attr">Dados do <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) e do CNPJ público via <a href="https://minhareceita.org/" target="_blank" rel="noopener">Minha Receita</a>.</p>
 </main><script>
 const $=s=>document.querySelector(s),CATS={restaurantes:'Restaurantes e lanchonetes',roupas:'Lojas de roupas e calçados',mercados:'Mercados e supermercados',beleza:'Barbearias e salões',oficinas:'Oficinas mecânicas',clinicas:'Clínicas e consultórios',academias:'Academias',padarias:'Padarias e confeitarias',hoteis:'Hotéis e pousadas',servicos:'Prestadores de serviços',outros:'Outros comércios'};
 const ST={SEM_SITE:'Sem site',COM_SITE:'Com site',NAO_VERIFICADO:'Não verificado'};
@@ -129,8 +129,8 @@ $('#go').onclick=async()=>{const city=$('#city').value.trim(),uf=$('#uf').value,
  try{const r=await fetch(`/api/search?${new URLSearchParams({city,uf,cat})}`,{signal:AbortSignal.timeout(65000)});let j;try{j=await r.json()}catch{throw new Error('O servidor demorou demais ou falhou. Tente uma cidade menor ou outra categoria.')}if(!r.ok)throw new Error(j.error);
   j.results.forEach(b=>db.biz[b.id]=b);cur=j.results.map(b=>b.id);onlyFav=false;
   db.hist=[{city,uf,cat,ids:cur,src:j.source},...db.hist.filter(h=>!(h.city==city&&h.uf==uf&&h.cat==cat))].slice(0,15);save();
-  const sem=j.results.filter(b=>b.status=='SEM_SITE').length;$('#fs').value=sem?'SEM_SITE':'';
-  $('#msg').textContent=cur.length?`${cur.length} empresas encontradas via ${j.source}, ${sem} sem site.`:'Nenhuma empresa encontrada. Tente outra categoria ou confira o nome da cidade.';
+  const sem=j.results.filter(b=>b.status=='SEM_SITE').length,phones=j.results.filter(b=>b.phone).length;$('#fs').value='';
+  $('#msg').textContent=cur.length?`${cur.length} empresas encontradas via ${j.source}, ${phones} com telefone e ${sem} sem site informado.`:'Nenhuma empresa encontrada. Tente outra categoria ou confira o nome da cidade.';
  }catch(e){cur=[];$('#msg').textContent=e.name=='TimeoutError'?'A busca demorou demais. Tente uma cidade menor ou outra categoria.':(e.message||'Não foi possível falar com o servidor.')}
  clearInterval(tm);$('#prog').style.visibility='hidden';$('#go').disabled=false;shown=25;stats();render()};
 $('#city').onkeydown=e=>{if(e.key=='Enter')$('#go').click()};

@@ -113,7 +113,7 @@ async function cnpjContacts(city, uf, cat) {
       const address = [[street, company.numero].filter(Boolean).join(', '), company.complemento, company.bairro, company.municipio].filter(Boolean).join(' - ');
       leads.push({ id: 'cnpj' + id, cnpj: id, name: company.nome_fantasia || company.razao_social,
         category: cat, address, phone, email: company.email || '', whatsapp: false, instagram: '', facebook: '', website: '',
-        rating: null, reviews: null, lat: null, lon: null, status: 'SEM_SITE', source: 'Receita Federal (Minha Receita)' });
+        rating: null, reviews: null, lat: null, lon: null, status: 'NAO_VERIFICADO', source: 'CNPJ público (Minha Receita)' });
     }
     cursor = result.cursor || '';
     if (!cursor) break;
@@ -185,9 +185,17 @@ export default async function handler(req, res) {
   const ck = (city + '|' + uf + '|' + cat).toLowerCase(), hit = cache.get(ck);
   if (hit && Date.now() - hit.t < 36e5) return res.json(hit.v);
   try {
-    const area = await geocode(city.trim(), uf.toUpperCase());
-    const list = await viaPhoton(city.trim(), uf.toUpperCase(), cat, area);
-    const companies = await cnpjContacts(city.trim(), uf.toUpperCase(), cat).catch(() => []);
+    const [osmResult, companies] = await Promise.all([
+      (async () => {
+        try {
+          const area = await geocode(city.trim(), uf.toUpperCase());
+          return { results: await viaPhoton(city.trim(), uf.toUpperCase(), cat, area) };
+        } catch (error) { return { results: [], error }; }
+      })(),
+      cnpjContacts(city.trim(), uf.toUpperCase(), cat).catch(() => []),
+    ]);
+    if (!osmResult.results.length && !companies.length && osmResult.error) throw osmResult.error;
+    const list = osmResult.results;
     const places = mergeSources(list, companies);
     const v = { source: companies.length ? 'OpenStreetMap + CNPJ público (Minha Receita)' : 'OpenStreetMap (Photon)', results: places };
     cache.set(ck, { t: Date.now(), v }); res.json(v);
