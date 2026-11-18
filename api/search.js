@@ -30,12 +30,15 @@ function classify(website, hasContact, verifiable) {
 }
 
 async function geocode(city, uf) {
-  const q = new URLSearchParams({ q: `${city}, ${uf}, Brasil`, format: 'json', limit: '5', countrycodes: 'br' });
+  const q = new URLSearchParams({ q: `${city}, ${uf}, Brasil`, format: 'json', limit: '10', countrycodes: 'br', addressdetails: '1' });
   const r = await tfetch('https://nominatim.openstreetmap.org/search?' + q, { headers: UA }, 8000);
   if (!r.ok) throw new Error('GEO');
-  const hit = (await r.json()).find(x => x.osm_type === 'relation');
+  const hits = await r.json();
+  const hit = hits.find(x => x.osm_type === 'relation' && ['city', 'town', 'village', 'municipality'].includes(x.type))
+    || hits.find(x => x.osm_type === 'relation' || x.osm_type === 'way');
   if (!hit) throw new Error('NOCITY');
-  return 3600000000 + Number(hit.osm_id); // id da área no Overpass
+  // IDs de área do Overpass usam offsets diferentes para relações e ways.
+  return (hit.osm_type === 'way' ? 2400000000 : 3600000000) + Number(hit.osm_id);
 }
 
 async function viaOverpass(city, uf, cat) {
