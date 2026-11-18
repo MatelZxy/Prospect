@@ -90,11 +90,11 @@ async function cnpjContacts(city, uf, cat) {
   const municipality = cities.find(item => norm(item.nome) === norm(city) &&
     (item['regiao-imediata']?.['regiao-intermediaria']?.UF?.sigla || item.microrregiao?.mesorregiao?.UF?.sigla) === uf);
   if (!municipality) return [];
-  const params = new URLSearchParams({ municipio: String(municipality.id), uf, cnae: codes.join(','), limit: '1024' });
+  const params = new URLSearchParams({ municipio: String(municipality.id), uf, cnae: codes.join(','), limit: '100' });
   const leads = [], seen = new Set();
   let cursor = '';
-  // Limite de páginas mantém o serviço público leve mesmo em cidades grandes.
-  for (let page = 0; page < 3; page++) {
+  // Uma página pequena evita sobrecarregar a API pública e mantém a busca rápida.
+  for (let page = 0; page < 1; page++) {
     if (cursor) params.set('cursor', cursor);
     const response = await tfetch('https://minhareceita.org/?' + params, { headers: { ...UA, Accept: 'application/json' } }, 12000);
     if (!response.ok) break;
@@ -187,12 +187,9 @@ export default async function handler(req, res) {
   try {
     const area = await geocode(city.trim(), uf.toUpperCase());
     const list = await viaPhoton(city.trim(), uf.toUpperCase(), cat, area);
-    const [contactData, companies] = await Promise.all([
-      enrichContacts(list),
-      cnpjContacts(city.trim(), uf.toUpperCase(), cat).catch(() => []),
-    ]);
-    const places = mergeSources(contactData.places, companies);
-    const v = { source: companies.length ? 'OpenStreetMap + Receita Federal (Minha Receita)' : contactData.enriched ? 'OpenStreetMap (Photon + Overpass)' : 'OpenStreetMap (Photon)', results: places };
+    const companies = await cnpjContacts(city.trim(), uf.toUpperCase(), cat).catch(() => []);
+    const places = mergeSources(list, companies);
+    const v = { source: companies.length ? 'OpenStreetMap + CNPJ público (Minha Receita)' : 'OpenStreetMap (Photon)', results: places };
     cache.set(ck, { t: Date.now(), v }); res.json(v);
   } catch (e) { const [s, m] = MSG[e.message] || [500, 'Erro inesperado.']; res.status(s).json({ error: m }); }
 }
