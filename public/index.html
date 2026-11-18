@@ -78,9 +78,10 @@ const SOC=/(instagram|facebook|fb\.com|wa\.me|whatsapp|linktr\.ee|tiktok|youtube
 const fu=(v,b)=>!v?'':/^https?:/i.test(v)?v:b+v.replace(/^@/,'');
 // Busca no OpenStreetMap direto do navegador: o pedido sai do IP de quem usa o site, não do servidor da Vercel
 async function osm(city,uf,cat){
- const g=await fetch('https://nominatim.openstreetmap.org/search?'+new URLSearchParams({q:`${city}, ${uf}, Brasil`,format:'json',limit:'5',countrycodes:'br'}),{signal:AbortSignal.timeout(12000)});
- const hit=(await g.json()).find(x=>x.osm_type=='relation');if(!hit)throw new Error('Cidade não encontrada. Confira o nome e o estado.');
- const ql=`[out:json][timeout:25];area(${3600000000+Number(hit.osm_id)})->.a;(${OSMF[cat].map(f=>`nwr${f}["name"](area.a);`).join('')});out center tags 400;`;
+ const g=await fetch('https://nominatim.openstreetmap.org/search?'+new URLSearchParams({q:`${city}, ${uf}, Brasil`,format:'json',limit:'10',countrycodes:'br',addressdetails:'1'}),{signal:AbortSignal.timeout(12000)});
+ if(!g.ok)throw new Error('Falha ao localizar cidade. Tente novamente.');
+ const hits=await g.json(),hit=hits.find(x=>x.osm_type=='relation'&&['city','town','village','municipality'].includes(x.type))||hits.find(x=>x.osm_type=='relation'||x.osm_type=='way');if(!hit)throw new Error('Cidade não encontrada. Confira o nome e o estado.');
+ const ql=`[out:json][timeout:25];area(${(hit.osm_type=='way'?2400000000:3600000000)+Number(hit.osm_id)})->.a;(${OSMF[cat].map(f=>`nwr${f}["name"](area.a);`).join('')});out center tags 400;`;
  for(const ep of ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter']){
   try{const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(ql),signal:AbortSignal.timeout(30000)});if(!r.ok)continue;
    return (await r.json()).elements.map(e=>{const t=e.tags,site=t.website||t['contact:website']||t.url||'',phone=t.phone||t['contact:phone']||t['contact:whatsapp']||'',ig=fu(t['contact:instagram']||t.instagram,'https://instagram.com/'),fb=fu(t['contact:facebook']||t.facebook,'https://facebook.com/');
