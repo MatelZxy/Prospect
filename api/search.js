@@ -84,7 +84,7 @@ async function viaPhoton(city, uf, cat, area) {
 async function cnpjContacts(city, uf, cat) {
   const codes = CATS[cat].cnae;
   if (!codes.length) return [];
-  const lookup = await tfetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios?nome=' + encodeURIComponent(city), { headers: UA }, 8000);
+  const lookup = await tfetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${encodeURIComponent(uf)}/municipios`, { headers: UA }, 8000);
   if (!lookup.ok) return [];
   const cities = await lookup.json();
   const municipality = cities.find(item => norm(item.nome) === norm(city) &&
