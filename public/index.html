@@ -97,7 +97,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 $('#uf').innerHTML='AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ').map(u=>`<option ${u=='SP'?'selected':''}>${u}</option>`).join('');
 $('#cat').innerHTML=Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
 
-function stats(){const all=Object.values(db.biz),n=s=>all.filter(b=>b.status==s).length;
+function stats(){const all=cur.map(id=>db.biz[id]).filter(Boolean),n=s=>all.filter(b=>b.status==s).length;
  $('#stats').innerHTML=[['Empresas encontradas',all.length],['Sem site',n('SEM_SITE'),'hot'],['Com site',n('COM_SITE')],['Não verificadas',n('NAO_VERIFICADO')],['Favoritas',Object.keys(db.fav).length]].map(([l,v,c])=>`<div class="${c||''}"><b>${v}</b><span>${l}</span></div>`).join('');
  $('#hist').innerHTML=db.hist.map((h,i)=>`<button data-i="${i}">${esc(h.city)}-${h.uf}, ${CATS[h.cat].toLowerCase()}</button>`).join('')}
 function tabs(){const c=cur.map(i=>db.biz[i]).filter(Boolean),n=s=>c.filter(b=>b.status==s).length;
@@ -139,7 +139,7 @@ $('#ffav').onclick=()=>{onlyFav=!onlyFav;if(onlyFav){cur=Object.keys(db.fav);$('
 
 const list=()=>{const q=$('#q').value.toLowerCase(),s=$('#fs').value,r=+$('#fr').value;
  return cur.map(id=>db.biz[id]).filter(b=>b&&(!q||b.name.toLowerCase().includes(q))&&(!s||b.status==s)&&(!r||b.rating>=r)&&(!$('#fp').checked||b.phone)&&(!$('#fi').checked||b.instagram))};
-function render(){tabs();const l=list();$('#more').style.display=l.length>shown?'':'none';
+function render(){stats();tabs();const l=list();$('#more').style.display=l.length>shown?'':'none';
  $('#res').innerHTML=l.slice(0,shown).map(b=>{const d=(b.phone||'').replace(/\D/g,''),w=d?`https://wa.me/${d.length<=11?'55'+d:d}`:'',lk=(h,i,t)=>`<a href="${esc(h)}" target="_blank" rel="noopener" title="${t}" aria-label="${t}">${ic(i)}</a>`,bt=(a,i,t,on)=>`<button data-a="${a}" data-id="${b.id}" class="${on?'on':''}" title="${t}" aria-label="${t}">${ic(i)}</button>`;
  return `<article class="row ${b.status} ${db.done[b.id]?'done':''}"><div><div class="top"><span class="pill">${ST[b.status]}</span><h3>${esc(b.name)}</h3></div>
  <div class="meta"><span>${CATS[b.category]}</span><span>${esc(b.address)||'Endereço não informado'}</span><span>Telefone: ${esc(b.phone)||'não cadastrado'}</span>${b.email?`<span>E-mail: ${esc(b.email)}</span>`:''}<span class="${b.website?'has-site':'site-missing'}">${b.website?'Site: '+esc(b.website.replace(/^https?:\/\/(www\.)?/i,'').replace(/\/$/,'')):b.status==='SEM_SITE'?'Sem site cadastrado':'Site não verificado'}</span>${b.contactSource?`<span>Contato: ${esc(b.contactSource.join(' + '))}</span>`:b.cnpj?'<span>Contato: Receita Federal (Minha Receita)</span>':''}${b.rating?`<span>${b.rating} estrelas, ${b.reviews} avaliações</span>`:''}</div></div>
