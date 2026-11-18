@@ -1,8 +1,5 @@
-export const config = { maxDuration: 60 }; // Vercel: permite até 60s por busca
-
-
-const KEY = process.env.GOOGLE_PLACES_KEY || '';
-const UA = { 'User-Agent': 'prospect-app/1.0 (uso local)' };
+export const config = { maxDuration: 60 }; // Vercel: permite até 60s por busca 
+const UA = { 'User-Agent': 'Prospect/1.0 (OpenStreetMap data search)' }; const KEY = '';
 const SOCIAL = /(instagram|facebook|fb\.com|wa\.me|whatsapp|linktr\.ee|tiktok|youtube|twitter|x\.com|google\.|goo\.gl|ifood)/i;
 
 // categoria -> filtros OSM + texto para o Google
@@ -46,10 +43,10 @@ async function viaOverpass(city, uf, cat) {
   const body = CATS[cat].o.map(f => `nwr${f}["name"](area.a);`).join('');
   const ql = `[out:json][timeout:25];area(${area})->.a;(${body});out center tags 400;`;
   let last = 'TIMEOUT'; const deadline = Date.now() + 50000; // orçamento total da busca
-  for (const ep of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']) {
+  for (const ep of ['https://overpass.private.coffee/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass-api.de/api/interpreter']) {
     const left = deadline - Date.now(); if (left < 8000) break;
     try {
-      const r = await tfetch(ep, { method: 'POST', headers: { ...UA, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(ql) }, Math.min(28000, left));
+      const r = await tfetch(ep, { method: 'POST', headers: { ...UA, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(ql) }, Math.min(16000, left));
       if (r.status === 429 || r.status === 504) { last = 'LIMIT'; continue; }
       if (!r.ok) { last = 'OVERPASS'; continue; }
       return (await r.json()).elements.map(e => {
