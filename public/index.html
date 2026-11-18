@@ -45,20 +45,37 @@ h1{font-size:clamp(28px,5vw,42px);line-height:1.1;letter-spacing:-.035em;font-we
 button:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 @media(max-width:640px){.row{grid-template-columns:1fr}.act{justify-content:flex-start}.search select{border-left:0;border-top:1px solid var(--ln);flex:1}.go{flex:1 1 100%}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
-/* Prospect visual refresh */
+/* Refinement: modern, quiet, responsive search workspace */
 :root{--bg:#f6f7f5;--sf:#fff;--ink:#17211d;--mut:#6b7770;--ln:#e3e9e5;--ac:#087f5b;--lead:#d9485f;--ok:#16865b;--nv:#a66a12;--r:16px;color-scheme:light}
 @media(prefers-color-scheme:dark){:root{--bg:#101714;--sf:#18211d;--ink:#edf4ef;--mut:#9eada4;--ln:#2a3730;--ac:#50c79b;--lead:#ff7284;--ok:#54d59b;--nv:#efbd68;color-scheme:dark}}
 body{background:radial-gradient(ellipse at 50% -15%,color-mix(in srgb,var(--ac) 9%,var(--bg)),var(--bg) 58%);font-size:14px}
-main{max-width:1080px;padding:34px 24px 80px}.logo{gap:10px;margin-bottom:48px;font-size:15px}.logo i{width:19px;height:19px;border-width:5px;box-shadow:0 0 0 5px color-mix(in srgb,var(--ac) 12%,transparent)}
-h1{max-width:18ch;font-size:clamp(34px,5vw,50px);letter-spacing:-.05em;line-height:1.04}.sub{font-size:15px;margin-bottom:30px}
-.search{gap:5px;border-radius:18px;padding:8px;box-shadow:0 12px 36px #16281a12}.search>*{padding:14px 16px}.search input{font-size:15px}.search:focus-within{border-color:color-mix(in srgb,var(--ac) 65%,var(--ln));box-shadow:0 0 0 4px color-mix(in srgb,var(--ac) 12%,transparent),0 12px 36px #16281a12}
-.go{background:linear-gradient(135deg,var(--ac),color-mix(in srgb,var(--ac) 78%,#073d2b))!important;border-radius:12px!important;box-shadow:0 5px 12px color-mix(in srgb,var(--ac) 22%,transparent);transition:transform .15s,box-shadow .15s}.go:hover{transform:translateY(-1px);box-shadow:0 8px 18px color-mix(in srgb,var(--ac) 26%,transparent)}
-#msg{margin-top:10px;font-size:13px}.chips{margin-bottom:30px}.stats{gap:10px;border:0;margin:20px 0 26px}.stats div,.stats div:last-child{border:1px solid var(--ln);border-radius:14px;background:var(--sf);padding:16px 18px;box-shadow:0 3px 12px #16281a08}.stats b{font-size:26px;letter-spacing:-.04em}.stats span{font-size:12px}
-.tools{gap:8px;margin:0 0 12px}.tabs{background:color-mix(in srgb,var(--ln) 75%,transparent);padding:4px}.tabs button{padding:7px 11px}.tools input[type=text],.tools select,.tools>button{border-color:var(--ln);border-radius:11px}.tools>button:hover,.more:hover{border-color:var(--ac);color:var(--ac)}
-.list{border:0;background:transparent;overflow:visible;display:grid;gap:9px}.row{background:var(--sf);border:1px solid var(--ln);border-left:3px solid transparent;border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px #16281a08;transition:transform .15s,border-color .15s,box-shadow .15s}.row:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--ac) 32%,var(--ln));box-shadow:0 7px 20px #16281a0d}.row:last-child{border-bottom:1px solid var(--ln)}.row.SEM_SITE{border-left-color:var(--lead)}.row.COM_SITE{border-left-color:var(--ok)}
-.top h3{font-size:15px;font-weight:700;letter-spacing:-.01em}.pill{border-radius:99px;padding:3px 9px;font-size:10px;letter-spacing:.02em;text-transform:uppercase}.meta{gap:5px 16px;font-size:12px}.meta .has-site{color:var(--ok);font-weight:700}.meta .site-missing{color:var(--mut)}
-.act{gap:6px}.act a,.act button{width:34px;height:34px;border-radius:10px;background:var(--bg)}.act a[aria-label="Visitar site"]{color:var(--ac);border-color:color-mix(in srgb,var(--ac) 28%,var(--ln))}.empty{border:1px dashed var(--ln);border-radius:16px;background:var(--sf);padding:52px 20px}.more{border-radius:11px;padding:10px 22px}.attr{margin-top:24px}
-@media(max-width:640px){main{padding:22px 14px 64px}.logo{margin-bottom:34px}.search select{border-top:1px solid var(--ln)}.stats{gap:7px}.stats div,.stats div:last-child{flex-basis:calc(50% - 4px);padding:13px}.row{padding:14px}.act{gap:5px}}</style></head><body><main>
+main{max-width:1080px;padding:34px 24px 80px}
+.logo{gap:10px;margin-bottom:48px;font-size:15px;letter-spacing:.01em}.logo i{width:19px;height:19px;border-width:5px;box-shadow:0 0 0 5px color-mix(in srgb,var(--ac) 12%,transparent)}
+h1{max-width:18ch;font-size:clamp(34px,5vw,50px);letter-spacing:-.05em;line-height:1.04}
+.sub{font-size:15px;margin-bottom:30px}
+.search{gap:5px;border-radius:18px;padding:8px;box-shadow:0 12px 36px #16281a12}
+.search>*{padding:14px 16px}.search input{font-size:15px}.search select{border-left:1px solid var(--ln)}
+.search:focus-within{border-color:color-mix(in srgb,var(--ac) 65%,var(--ln));box-shadow:0 0 0 4px color-mix(in srgb,var(--ac) 12%,transparent),0 12px 36px #16281a12}
+.go{background:linear-gradient(135deg,var(--ac),color-mix(in srgb,var(--ac) 78%,#073d2b))!important;border-radius:12px!important;box-shadow:0 5px 12px color-mix(in srgb,var(--ac) 22%,transparent);transition:transform .15s,box-shadow .15s}
+.go:hover{transform:translateY(-1px);box-shadow:0 8px 18px color-mix(in srgb,var(--ac) 26%,transparent)}
+#msg{margin-top:10px;font-size:13px}.chips{margin-bottom:30px}
+.stats{gap:10px;border:0;margin:20px 0 26px}
+.stats div,.stats div:last-child{border:1px solid var(--ln);border-radius:14px;background:var(--sf);padding:16px 18px;box-shadow:0 3px 12px #16281a08}
+.stats b{font-size:26px;letter-spacing:-.04em}.stats span{font-size:12px}
+.tools{gap:8px;margin:0 0 12px}.tabs{background:color-mix(in srgb,var(--ln) 75%,transparent);padding:4px}.tabs button{padding:7px 11px}
+.tools input[type=text],.tools select,.tools>button{border-color:var(--ln);border-radius:11px}.tools>button:hover,.more:hover{border-color:var(--ac);color:var(--ac)}
+.list{border:0;background:transparent;overflow:visible;display:grid;gap:9px}
+.row{background:var(--sf);border:1px solid var(--ln);border-left:3px solid transparent;border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px #16281a08;transition:transform .15s,border-color .15s,box-shadow .15s}
+.row:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--ac) 32%,var(--ln));box-shadow:0 7px 20px #16281a0d}
+.row:last-child{border-bottom:1px solid var(--ln)}.row.SEM_SITE{border-left-color:var(--lead)}.row.COM_SITE{border-left-color:var(--ok)}
+.top h3{font-size:15px;font-weight:700;letter-spacing:-.01em}.pill{border-radius:99px;padding:3px 9px;font-size:10px;letter-spacing:.02em;text-transform:uppercase}
+.meta{gap:5px 16px;font-size:12px}.act{gap:6px}.act a,.act button{width:34px;height:34px;border-radius:10px;background:var(--bg)}
+.meta .has-site{color:var(--ok);font-weight:700}.meta .site-missing{color:var(--mut)}
+.act a[aria-label="Visitar site"]{color:var(--ac);border-color:color-mix(in srgb,var(--ac) 28%,var(--ln))}
+.empty{border:1px dashed var(--ln);border-radius:16px;background:var(--sf);padding:52px 20px}
+.more{border-radius:11px;padding:10px 22px}.attr{margin-top:24px}
+@media(max-width:640px){main{padding:22px 14px 64px}.logo{margin-bottom:34px}.search select{border-top:1px solid var(--ln)}.stats{gap:7px}.stats div,.stats div:last-child{flex-basis:calc(50% - 4px);padding:13px}.row{padding:14px}.act{gap:5px}}
+</style></head><body><main>
 <div class="logo"><i></i>Prospect</div>
 <h1>Encontre quem ainda não tem site.</h1><p class="sub">Pesquise uma cidade e veja quais negócios podem virar cliente.</p>
 <div class="search"><input type="text" id="city" placeholder="Cidade, ex.: Birigui" aria-label="Cidade"><select id="uf" aria-label="Estado"></select><select id="cat" aria-label="Categoria"></select><button class="go" id="go">Pesquisar</button></div>
@@ -125,8 +142,8 @@ const list=()=>{const q=$('#q').value.toLowerCase(),s=$('#fs').value,r=+$('#fr')
 function render(){tabs();const l=list();$('#more').style.display=l.length>shown?'':'none';
  $('#res').innerHTML=l.slice(0,shown).map(b=>{const d=(b.phone||'').replace(/\D/g,''),w=d?`https://wa.me/${d.length<=11?'55'+d:d}`:'',lk=(h,i,t)=>`<a href="${esc(h)}" target="_blank" rel="noopener" title="${t}" aria-label="${t}">${ic(i)}</a>`,bt=(a,i,t,on)=>`<button data-a="${a}" data-id="${b.id}" class="${on?'on':''}" title="${t}" aria-label="${t}">${ic(i)}</button>`;
  return `<article class="row ${b.status} ${db.done[b.id]?'done':''}"><div><div class="top"><span class="pill">${ST[b.status]}</span><h3>${esc(b.name)}</h3></div>
- <div class="meta"><span>${CATS[b.category]}</span><span>${esc(b.address)||'Endereço não informado'}</span><span>Telefone: ${esc(b.phone)||'não cadastrado'}</span><span class="${b.website?'has-site':'site-missing'}">${b.website?'Site: '+esc(b.website.replace(/^https?:\/\/(www\.)?/i,'').replace(/\/$/,'')):b.status==='SEM_SITE'?'Sem site cadastrado':'Site não verificado'}</span>${b.rating?`<span>${b.rating} estrelas, ${b.reviews} avaliações</span>`:''}</div></div>
- <div class="act">${w?lk(w,'chat','Abrir WhatsApp'):''}${b.instagram?lk(b.instagram,'ig','Abrir Instagram'):''}${b.facebook?lk(b.facebook,'fb','Abrir Facebook'):''}${b.website?lk(b.website,'web','Visitar site'):''}${b.lat?lk(`https://www.google.com/maps/search/?api=1&query=${b.lat},${b.lon}`,'pin','Ver no mapa'):''}
+ <div class="meta"><span>${CATS[b.category]}</span><span>${esc(b.address)||'Endereço não informado'}</span><span>Telefone: ${esc(b.phone)||'não cadastrado'}</span>${b.email?`<span>E-mail: ${esc(b.email)}</span>`:''}<span class="${b.website?'has-site':'site-missing'}">${b.website?'Site: '+esc(b.website.replace(/^https?:\/\/(www\.)?/i,'').replace(/\/$/,'')):b.status==='SEM_SITE'?'Sem site cadastrado':'Site não verificado'}</span>${b.contactSource?`<span>Contato: ${esc(b.contactSource.join(' + '))}</span>`:b.cnpj?'<span>Contato: Receita Federal (Minha Receita)</span>':''}${b.rating?`<span>${b.rating} estrelas, ${b.reviews} avaliações</span>`:''}</div></div>
+ <div class="act">${w?lk(w,'chat','Abrir WhatsApp'):''}${b.email?`<a href="mailto:${esc(b.email)}" title="Enviar e-mail" aria-label="Enviar e-mail">@</a>`:''}${b.instagram?lk(b.instagram,'ig','Abrir Instagram'):''}${b.facebook?lk(b.facebook,'fb','Abrir Facebook'):''}${b.website?lk(b.website,'web','Visitar site'):''}${b.lat?lk(`https://www.google.com/maps/search/?api=1&query=${b.lat},${b.lon}`,'pin','Ver no mapa'):''}
  ${bt('note','note','Anotações',open.has(b.id))}${bt('fav','star','Favoritar',db.fav[b.id])}${bt('done','ok','Marcar como contatada',db.done[b.id])}</div>
  ${open.has(b.id)||db.notes[b.id]?`<div class="notes"><textarea rows="2" placeholder="Anotações sobre esta empresa" data-id="${b.id}">${esc(db.notes[b.id])}</textarea></div>`:''}</article>`}).join('')
  ||`<div class="empty">${cur.length?'Nenhuma empresa com esses filtros. Troque a aba ou limpe os filtros.':'Nenhuma pesquisa por aqui ainda. Digite uma cidade e escolha uma categoria.'}</div>`}
