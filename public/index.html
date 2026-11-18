@@ -89,13 +89,11 @@ async function osm(city,uf,cat){
      status:site&&!SOC.test(site)?'COM_SITE':(!site&&!phone&&!ig&&!fb)?'NAO_VERIFICADO':'SEM_SITE',source:'OpenStreetMap'}})
   }catch{}}
  throw new Error('O OpenStreetMap não respondeu. Tente de novo em instantes ou escolha uma categoria mais específica.')}
-const hasG=fetch('/api/search?info=1').then(r=>r.json()).then(j=>!!j.google).catch(()=>false);
-
 $('#go').onclick=async()=>{const city=$('#city').value.trim(),uf=$('#uf').value,cat=$('#cat').value;
  if(!city)return $('#msg').textContent='Digite o nome da cidade para pesquisar.';
  const t0=Date.now(),tm=setInterval(()=>$('#msg').textContent=`Buscando… ${Math.round((Date.now()-t0)/1000)}s (pode levar até 1 min)`,1000);
  $('#msg').textContent='Buscando…';$('#prog').style.visibility='visible';$('#go').disabled=true;$('#res').innerHTML='<div class="sk"></div>'.repeat(5);
- try{let j;if(await hasG){const r=await fetch(`/api/search?${new URLSearchParams({city,uf,cat})}`,{signal:AbortSignal.timeout(65000)});try{j=await r.json()}catch{throw new Error('O servidor demorou demais ou falhou. Tente uma cidade menor ou outra categoria.')}if(!r.ok)throw new Error(j.error)}else j={source:'OpenStreetMap',results:await osm(city,uf,cat)};
+ try{const r=await fetch(`/api/search?${new URLSearchParams({city,uf,cat})}`,{signal:AbortSignal.timeout(65000)});let j;try{j=await r.json()}catch{throw new Error('O servidor demorou demais ou falhou. Tente uma cidade menor ou outra categoria.')}if(!r.ok)throw new Error(j.error);
   j.results.forEach(b=>db.biz[b.id]=b);cur=j.results.map(b=>b.id);onlyFav=false;
   db.hist=[{city,uf,cat,ids:cur,src:j.source},...db.hist.filter(h=>!(h.city==city&&h.uf==uf&&h.cat==cat))].slice(0,15);save();
   const sem=j.results.filter(b=>b.status=='SEM_SITE').length;$('#fs').value=sem?'SEM_SITE':'';
