@@ -1,20 +1,22 @@
-export const config = { maxDuration: 60 }; // Vercel: permite até 60s por busca 
-const UA = { 'User-Agent': 'Prospect/1.0 (OpenStreetMap data search)' }; const KEY = '';
+export const config = { maxDuration: 60 }; // Vercel: permite até 60s por busca
+
+
+const UA = { 'User-Agent': 'Prospect/1.0 (OpenStreetMap data search)' };
 const SOCIAL = /(instagram|facebook|fb\.com|wa\.me|whatsapp|linktr\.ee|tiktok|youtube|twitter|x\.com|google\.|goo\.gl|ifood)/i;
 
-// categoria -> filtros OSM + texto para o Google
+// Categoria -> filtros no OpenStreetMap
 const CATS = {
-  restaurantes: { g: 'restaurantes e lanchonetes', o: ['["amenity"~"^(restaurant|fast_food|cafe|bar)$"]'] },
-  roupas:       { g: 'lojas de roupas e calçados', o: ['["shop"~"^(clothes|shoes|boutique|fashion)$"]'] },
-  mercados:     { g: 'mercados e supermercados',   o: ['["shop"~"^(supermarket|convenience|greengrocer|butcher)$"]'] },
-  beleza:       { g: 'barbearias e salões de beleza', o: ['["shop"~"^(hairdresser|beauty|barber)$"]'] },
-  oficinas:     { g: 'oficinas mecânicas',         o: ['["shop"~"^(car_repair|tyres|motorcycle_repair)$"]'] },
-  clinicas:     { g: 'clínicas e consultórios',    o: ['["amenity"~"^(clinic|doctors|dentist)$"]'] },
-  academias:    { g: 'academias',                  o: ['["leisure"="fitness_centre"]'] },
-  padarias:     { g: 'padarias e confeitarias',    o: ['["shop"~"^(bakery|pastry|confectionery)$"]'] },
-  hoteis:       { g: 'hotéis e pousadas',          o: ['["tourism"~"^(hotel|guest_house|motel|hostel)$"]'] },
-  servicos:     { g: 'prestadores de serviços',    o: ['["office"]', '["craft"]'] },
-  outros:       { g: 'comércio',                   o: ['["shop"]'] },
+  restaurantes: { o: ['["amenity"~"^(restaurant|fast_food|cafe|bar)$"]'] },
+  roupas:       { o: ['["shop"~"^(clothes|shoes|boutique|fashion)$"]'] },
+  mercados:     { o: ['["shop"~"^(supermarket|convenience|greengrocer|butcher)$"]'] },
+  beleza:       { o: ['["shop"~"^(hairdresser|beauty|barber)$"]'] },
+  oficinas:     { o: ['["shop"~"^(car_repair|tyres|motorcycle_repair)$"]'] },
+  clinicas:     { o: ['["amenity"~"^(clinic|doctors|dentist)$"]'] },
+  academias:    { o: ['["leisure"="fitness_centre"]'] },
+  padarias:     { o: ['["shop"~"^(bakery|pastry|confectionery)$"]'] },
+  hoteis:       { o: ['["tourism"~"^(hotel|guest_house|motel|hostel)$"]'] },
+  servicos:     { o: ['["office"]', '["craft"]'] },
+  outros:       { o: ['["shop"]'] },
 };
 
 const tfetch = (u, o = {}, ms = 20000) => fetch(u, { ...o, signal: AbortSignal.timeout(ms) });
@@ -34,67 +36,45 @@ async function geocode(city, uf) {
   const hit = hits.find(x => x.osm_type === 'relation' && ['city', 'town', 'village', 'municipality'].includes(x.type))
     || hits.find(x => x.osm_type === 'relation' || x.osm_type === 'way');
   if (!hit) throw new Error('NOCITY');
-  // IDs de área do Overpass usam offsets diferentes para relações e ways.
-  return (hit.osm_type === 'way' ? 2400000000 : 3600000000) + Number(hit.osm_id);
+  const [south, north, west, east] = hit.boundingbox.map(Number);
+  return { bbox: [west, south, east, north], center: [+hit.lon, +hit.lat] };
 }
 
-async function viaOverpass(city, uf, cat) {
-  const area = await geocode(city, uf);
-  const body = CATS[cat].o.map(f => `nwr${f}["name"](area.a);`).join('');
-  const ql = `[out:json][timeout:25];area(${area})->.a;(${body});out center tags 400;`;
-  let last = 'TIMEOUT'; const deadline = Date.now() + 50000; // orçamento total da busca
-  for (const ep of ['https://overpass.private.coffee/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass-api.de/api/interpreter']) {
-    const left = deadline - Date.now(); if (left < 8000) break;
-    try {
-      const r = await tfetch(ep, { method: 'POST', headers: { ...UA, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(ql) }, Math.min(16000, left));
-      if (r.status === 429 || r.status === 504) { last = 'LIMIT'; continue; }
-      if (!r.ok) { last = 'OVERPASS'; continue; }
-      return (await r.json()).elements.map(e => {
-        const t = e.tags, lat = e.lat ?? e.center?.lat, lon = e.lon ?? e.center?.lon;
-        const site = t.website || t['contact:website'] || t.url || '';
-        const phone = t.phone || t['contact:phone'] || t['contact:whatsapp'] || '';
-        const ig = url(t['contact:instagram'] || t.instagram, 'https://instagram.com/');
-        const fb = url(t['contact:facebook'] || t.facebook, 'https://facebook.com/');
-        const addr = [[t['addr:street'], t['addr:housenumber']].filter(Boolean).join(', '), t['addr:suburb'], t['addr:city']].filter(Boolean).join(' - ');
-        return { id: `osm${e.type[0]}${e.id}`, name: t.name, category: cat, address: addr, phone, whatsapp: !!t['contact:whatsapp'],
-          instagram: ig, facebook: fb, website: SOCIAL.test(site) ? '' : site, rating: null, reviews: null, lat, lon,
-          status: classify(site, phone || ig || fb, false), source: 'OpenStreetMap' };
-      });
-    } catch (e) { last = e.name === 'TimeoutError' ? 'TIMEOUT' : 'OVERPASS'; }
+const TERMS = { restaurantes:'restaurant', roupas:'clothing', mercados:'supermarket', beleza:'hairdresser', oficinas:'car repair', clinicas:'clinic', academias:'gym', padarias:'bakery', hoteis:'hotel', servicos:'office', outros:'shop' };
+const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+async function viaPhoton(city, uf, cat, area) {
+  const params = new URLSearchParams({ q: TERMS[cat], bbox: area.bbox.join(','), limit: '100' });
+  for (const f of CATS[cat].o) {
+    const key = f.match(/\["([^\"]+)"/)?.[1];
+    const values = f.match(/\^\(([^)]+)\)/)?.[1]?.split('|') || [f.match(/="([^\"]+)"/)?.[1] || ''];
+    for (const value of values) params.append('osm_tag', value ? `${key}:${value}` : key);
   }
-  throw new Error(last);
+  const r = await tfetch('https://photon.komoot.io/api/?' + params, { headers: UA }, 15000);
+  if (!r.ok) throw new Error(r.status === 429 ? 'LIMIT' : 'PHOTON');
+  const j = await r.json(), target = norm(city);
+  return j.features.filter(f => norm(f.properties.city) === target)
+    .map(f => {
+      const p = f.properties, [lon, lat] = f.geometry.coordinates;
+      const address = [[p.street, p.housenumber].filter(Boolean).join(', '), p.district || p.locality, p.city].filter(Boolean).join(' - ');
+      return { id: `osm${p.osm_type}${p.osm_id}`, name: p.name, category: cat, address,
+        phone: p.phone || p.extra?.phone || '', whatsapp: false, instagram: '', facebook: '',
+        website: p.website || p.extra?.website || '', rating: null, reviews: null, lat, lon,
+        status: classify(p.website || p.extra?.website || '', p.phone || p.extra?.phone, false), source: 'OpenStreetMap (Photon)' };
+    });
 }
 
-async function viaGoogle(city, uf, cat) {
-  const out = []; let pageToken;
-  for (let i = 0; i < 3; i++) {
-    const r = await fetch('https://places.googleapis.com/v1/places:searchText', { method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': KEY,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.location,nextPageToken' },
-      body: JSON.stringify({ textQuery: `${CATS[cat].g} em ${city}, ${uf}, Brasil`, languageCode: 'pt-BR', pageSize: 20, ...(pageToken && { pageToken }) }) });
-    if (!r.ok) throw new Error(r.status === 429 ? 'LIMIT' : 'GOOGLE');
-    const j = await r.json();
-    for (const p of j.places || []) out.push({ id: 'g' + p.id, name: p.displayName?.text, category: cat, address: p.formattedAddress || '',
-      phone: p.nationalPhoneNumber || '', whatsapp: false, instagram: '', facebook: '',
-      website: p.websiteUri && !SOCIAL.test(p.websiteUri) ? p.websiteUri : '', rating: p.rating ?? null, reviews: p.userRatingCount ?? null,
-      lat: p.location?.latitude, lon: p.location?.longitude, status: classify(p.websiteUri, true, true), source: 'Google Places' });
-    if (!(pageToken = j.nextPageToken)) break;
-  }
-  return out;
-}
-
-const MSG = { TIMEOUT: [504, 'O OpenStreetMap demorou demais para responder. Tente de novo em instantes ou use uma categoria mais específica.'], NOCITY: [404, 'Cidade não encontrada. Confira o nome e o estado.'], LIMIT: [429, 'Limite de requisições da fonte atingido. Aguarde um minuto e tente de novo.'],
-  GEO: [502, 'Falha ao localizar a cidade (Nominatim).'], OVERPASS: [502, 'Falha ao consultar o OpenStreetMap.'], GOOGLE: [502, 'Falha na Google Places API. Verifique a chave e a cota.'] };
+const MSG = { TIMEOUT: [504, 'A busca gratuita demorou demais para responder. Tente de novo em instantes.'], NOCITY: [404, 'Cidade não encontrada. Confira o nome e o estado.'], LIMIT: [429, 'Limite gratuito atingido. Aguarde um minuto e tente de novo.'],
+  GEO: [502, 'Falha ao localizar a cidade (Nominatim).'], PHOTON: [502, 'Falha ao consultar a busca gratuita do OpenStreetMap (Photon).'] };
 
 export default async function handler(req, res) {
-  if (req.query.info) return res.json({ google: !!KEY }); // o site pergunta se há chave do Google
   const { city = '', uf = '', cat = 'outros' } = req.query;
   if (!city.trim() || !/^[A-Za-z]{2}$/.test(uf) || !CATS[cat]) return res.status(400).json({ error: 'Informe cidade, UF e categoria válidas.' });
   const ck = `${city}|${uf}|${cat}`.toLowerCase(), hit = cache.get(ck);
   if (hit && Date.now() - hit.t < 36e5) return res.json(hit.v);
   try {
-    const list = KEY ? await viaGoogle(city.trim(), uf.toUpperCase(), cat) : await viaOverpass(city.trim(), uf.toUpperCase(), cat);
-    const v = { source: KEY ? 'Google Places' : 'OpenStreetMap', results: list };
+    const area = await geocode(city.trim(), uf.toUpperCase());
+    const list = await viaPhoton(city.trim(), uf.toUpperCase(), cat, area);
+    const v = { source: 'OpenStreetMap (Photon)', results: list };
     cache.set(ck, { t: Date.now(), v }); res.json(v);
   } catch (e) { const [s, m] = MSG[e.message] || [500, 'Erro inesperado.']; res.status(s).json({ error: m }); }
 }

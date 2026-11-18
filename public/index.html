@@ -40,6 +40,7 @@ h1{font-size:clamp(28px,5vw,42px);line-height:1.1;letter-spacing:-.035em;font-we
 .act svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .notes{grid-column:1/-1}textarea{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--ln);border-radius:8px;padding:8px;font:inherit;resize:vertical}
 .empty{padding:48px 20px;text-align:center;color:var(--mut)}.sk{height:62px;border-bottom:1px solid var(--ln);background:linear-gradient(90deg,transparent,var(--bg),transparent) 0/200% 100%;animation:s 1.2s infinite}@keyframes s{to{background-position:-200% 0}}
+.attr{color:var(--mut);font-size:11px;margin:18px 4px}.attr a{color:inherit}
 .more{display:block;margin:16px auto;border:1px solid var(--ln);background:var(--sf);color:var(--ink);border-radius:10px;padding:8px 20px;font:inherit;cursor:pointer}
 button:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 @media(max-width:640px){.row{grid-template-columns:1fr}.act{justify-content:flex-start}.search select{border-left:0;border-top:1px solid var(--ln);flex:1}.go{flex:1 1 100%}}
@@ -53,7 +54,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:
 <div class="tools"><div class="tabs" id="tabs"></div><input type="text" id="q" placeholder="Buscar pelo nome" aria-label="Buscar pelo nome"><input type="hidden" id="fs" value="">
 <select id="fr" aria-label="Nota mínima"><option value="0">Qualquer nota</option><option value="4">4+ estrelas</option><option value="4.5">4,5+ estrelas</option></select>
 <label><input type="checkbox" id="fp"> Telefone</label><label><input type="checkbox" id="fi"> Instagram</label><button id="ffav">Favoritas</button><span class="sp"></span><button id="csv">CSV</button><button id="xls">Excel</button></div>
-<div class="list" id="res"></div><button class="more" id="more">Mostrar mais</button>
+<div class="list" id="res"></div><button class="more" id="more">Mostrar mais</button><p class="attr">Dados e resultados por <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> (ODbL).</p>
 </main><script>
 const $=s=>document.querySelector(s),CATS={restaurantes:'Restaurantes e lanchonetes',roupas:'Lojas de roupas e calçados',mercados:'Mercados e supermercados',beleza:'Barbearias e salões',oficinas:'Oficinas mecânicas',clinicas:'Clínicas e consultórios',academias:'Academias',padarias:'Padarias e confeitarias',hoteis:'Hotéis e pousadas',servicos:'Prestadores de serviços',outros:'Outros comércios'};
 const ST={SEM_SITE:'Sem site',COM_SITE:'Com site',NAO_VERIFICADO:'Não verificado'};
@@ -79,9 +80,9 @@ const fu=(v,b)=>!v?'':/^https?:/i.test(v)?v:b+v.replace(/^@/,'');
 // Busca no OpenStreetMap direto do navegador: o pedido sai do IP de quem usa o site, não do servidor da Vercel
 async function osm(city,uf,cat){
  const g=await fetch('https://nominatim.openstreetmap.org/search?'+new URLSearchParams({q:`${city}, ${uf}, Brasil`,format:'json',limit:'10',countrycodes:'br',addressdetails:'1'}),{signal:AbortSignal.timeout(12000)});
- if(!g.ok)throw new Error('Falha ao localizar cidade. Tente novamente.');
  const hits=await g.json(),hit=hits.find(x=>x.osm_type=='relation'&&['city','town','village','municipality'].includes(x.type))||hits.find(x=>x.osm_type=='relation'||x.osm_type=='way');if(!hit)throw new Error('Cidade não encontrada. Confira o nome e o estado.');
- const ql=`[out:json][timeout:25];area(${(hit.osm_type=='way'?2400000000:3600000000)+Number(hit.osm_id)})->.a;(${OSMF[cat].map(f=>`nwr${f}["name"](area.a);`).join('')});out center tags 400;`;
+ const area=(hit.osm_type=='way'?2400000000:3600000000)+Number(hit.osm_id);
+ const ql=`[out:json][timeout:25];area(${area})->.a;(${OSMF[cat].map(f=>`nwr${f}["name"](area.a);`).join('')});out center tags 400;`;
  for(const ep of ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter']){
   try{const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(ql),signal:AbortSignal.timeout(30000)});if(!r.ok)continue;
    return (await r.json()).elements.map(e=>{const t=e.tags,site=t.website||t['contact:website']||t.url||'',phone=t.phone||t['contact:phone']||t['contact:whatsapp']||'',ig=fu(t['contact:instagram']||t.instagram,'https://instagram.com/'),fb=fu(t['contact:facebook']||t.facebook,'https://facebook.com/');
@@ -89,6 +90,8 @@ async function osm(city,uf,cat){
      status:site&&!SOC.test(site)?'COM_SITE':(!site&&!phone&&!ig&&!fb)?'NAO_VERIFICADO':'SEM_SITE',source:'OpenStreetMap'}})
   }catch{}}
  throw new Error('O OpenStreetMap não respondeu. Tente de novo em instantes ou escolha uma categoria mais específica.')}
+
+
 $('#go').onclick=async()=>{const city=$('#city').value.trim(),uf=$('#uf').value,cat=$('#cat').value;
  if(!city)return $('#msg').textContent='Digite o nome da cidade para pesquisar.';
  const t0=Date.now(),tm=setInterval(()=>$('#msg').textContent=`Buscando… ${Math.round((Date.now()-t0)/1000)}s (pode levar até 1 min)`,1000);
